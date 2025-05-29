@@ -1,0 +1,39 @@
+from django.contrib import admin
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from planner.views import generate_schedule_view
+
+
+from planner.views import SubjectViewSet, TopicViewSet, UserAvailabilityViewSet, StudyScheduleViewSet  # <- Import them!
+from planner.views import home
+
+
+#for calendar
+from planner.views import StudyScheduleViewSet
+from planner.views import calendar_events_view
+
+from planner.views import calendar_page
+
+
+
+router = DefaultRouter()
+
+router.register(r'subjects', SubjectViewSet, basename='subject')
+router.register(r'topics', TopicViewSet, basename='topic')
+router.register(r'useravailability', UserAvailabilityViewSet, basename='useravailability')
+router.register(r'studyschedule', StudyScheduleViewSet, basename='studyschedule')
+
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api/', include(router.urls)),
+    path('api/generate-schedule/', generate_schedule_view, name='generate-schedule'),
+    path('', home, name='home'),
+    path('api/calendar-events/', calendar_events_view, name='calendar-events'),
+    path('calendar/', calendar_page, name='calendar-page'),
+    path('', include('planner.urls')),
+   
+]
+
+
+

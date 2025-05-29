@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Study Planner Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    form {
+      margin-bottom: 30px;
+    }
+
+    #calendar {
+      max-width: 1000px;
+      margin: 20px auto;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    input, select, button {
+      margin-top: 5px;
+      padding: 5px;
+    }
+
+    .form-section {
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+
+    .form-section h3 {
+      margin-top: 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>📚 Study Planner Dashboard</h1>
+
+  <!-- Subject Form -->
+  <div class="form-section">
+    <h3>Add Subject</h3>
+    <form id="subject-form">
+      <label>Subject Name:</label>
+      <input type="text" id="subject-name" required>
+      <label>Exam Date:</label>
+      <input type="date" id="exam-date" required>
+      <button type="submit">Add Subject</button>
+    </form>
+  </div>
+
+  <!-- Topic Form -->
+  <div class="form-section">
+    <h3>Add Topic</h3>
+    <form id="topic-form">
+      <label>Subject (ID):</label>
+      <input type="number" id="subject-id" required>
+      <label>Topic Title:</label>
+      <input type="text" id="topic-title" required>
+      <label>Difficulty (1-5):</label>
+      <input type="number" id="difficulty" min="1" max="5" required>
+      <button type="submit">Add Topic</button>
+    </form>
+  </div>
+
+  <!-- Generate Schedule Button -->
+  <div>
+    <button onclick="generateSchedule()">Generate Schedule</button>
+  </div>
+
+  <!-- Calendar -->
+  <h2 style="margin-top: 40px;">📅 Your Study Schedule</h2>
+  <div id="calendar"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Calendar Setup
+      const calendarEl = document.getElementById('calendar');
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        events: '/api/calendar-events/',
+        eventColor: '#28a745',
+        height: 'auto',
+        eventClick: function (info) {
+          alert('Topic: ' + info.event.title);
+        }
+      });
+      calendar.render();
+
+      // Subject Form Submit
+      document.getElementById('subject-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const name = document.getElementById('subject-name').value;
+        const examDate = document.getElementById('exam-date').value;
+        await fetch('/api/subjects/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({ name: name, exam_date: examDate })
+        });
+        alert('Subject added.');
+      });
+
+      // Topic Form Submit
+      document.getElementById('topic-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const subjectId = document.getElementById('subject-id').value;
+        const title = document.getElementById('topic-title').value;
+        const difficulty = document.getElementById('difficulty').value;
+        await fetch('/api/topics/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({ subject: subjectId, title: title, difficulty: difficulty })
+        });
+        alert('Topic added.');
+      });
+
+      // Generate Schedule
+      window.generateSchedule = async function () {
+        const response = await fetch('/api/generate-schedule/', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+          }
+        });
+        alert('Schedule Generated!');
+        calendar.refetchEvents();
+      };
+
+      // CSRF helper
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+    });
+  </script>
+</body>
+</html>
