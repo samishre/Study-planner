@@ -32,6 +32,7 @@ urlpatterns = [
     path('api/calendar-events/', calendar_events_view, name='calendar-events'),
     path('calendar/', calendar_page, name='calendar-page'),
     path('', include('planner.urls')),
+    #path('api/users/', include('users.urls')),
    
 ]
 

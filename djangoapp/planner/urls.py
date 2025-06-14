@@ -2,6 +2,8 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from .views import dashboard
+from . import views
+
 from .views import (
     calendar_page,
     calendar_events_view,
@@ -26,6 +28,9 @@ urlpatterns = [
     path('api/generate-schedule/', generate_schedule_view, name='generate-schedule'),
     path('api/', include(router.urls)),
     path('dashboard/', dashboard, name='dashboard'),
+    path('signup/', views.signup_view, name='signup'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
 ]
 
 

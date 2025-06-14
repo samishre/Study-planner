@@ -7,8 +7,11 @@ from .models import Subject, Topic, UserAvailability
 from .serializers import SubjectSerializer, TopicSerializer, UserAvailabilitySerializer
 from .scheduler import generate_schedule
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
+#for login log out 
+from django.contrib.auth import login, logout
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 
 def calendar_page(request):
     return render(request, 'planner/calendar.html')
@@ -99,5 +102,36 @@ def generate_schedule_view(request):
 #for dashboard frontend
 def dashboard(request):
     return render(request, 'planner/dashboard.html')
+
+
+
+# Signup View
+def signup_view(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)  # log the user in after signup
+            return redirect('dashboard')  # or wherever you want
+    else:
+        form = UserCreationForm()
+    return render(request, 'users/signup.html', {'form': form})
+
+# Login View
+def login_view(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            return redirect('dashboard')  # or your home page
+    else:
+        form = AuthenticationForm()
+    return render(request, 'users/login.html', {'form': form})
+
+# Logout View
+def logout_view(request):
+    logout(request)
+    return redirect('login')  # back to login after logout
 
 
