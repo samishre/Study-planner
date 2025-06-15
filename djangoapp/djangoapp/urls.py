@@ -7,6 +7,7 @@ from django.shortcuts import render
 from planner.views import SubjectViewSet, TopicViewSet, UserAvailabilityViewSet, StudyScheduleViewSet  # <- Import them!
 from planner.views import home  # or from users.views if home() is there
 from users.views import signup_view, login_view, dashboard_view  # import your views
+from users import views as user_views
 
 
 #for calendar
@@ -42,11 +43,16 @@ urlpatterns = [
    
     path('signup/', signup_view, name='signup'),
     path('login/', login_view, name='login'),
+    path('', user_views.landing, name='guest_landing'),
+    path('home/', user_views.landing_authenticated, name='auth_landing'),
     path('dashboard/', dashboard_view , name='dashboard'),
     path('users/', include('users.urls')),  # 👈 include the users app routes
 ]
 
    
+
+
+
 
 
 

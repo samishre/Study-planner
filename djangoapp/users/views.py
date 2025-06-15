@@ -18,18 +18,36 @@ def signup_view(request):
 
 
 def login_view(request):
+    next_url = request.GET.get('next') 
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('landing')  # Redirect to landing/dashboard after login
+            return redirect(next_url if next_url else 'landing_authenticated')# Redirect to landing/dashboard after login
         else:
             messages.error(request, 'Invalid username or password.')
     return render(request, 'users/login.html')
 
 
+def landing(request):
+    if request.user.is_authenticated:
+        return redirect('auth_landing')
+    return render(request, 'landing.html')
+
+@login_required
+def landing_authenticated(request):
+    return render(request, 'landing_authenticated.html')
+
 @login_required
 def dashboard_view(request):
     return render(request, 'users/dashboard.html')
+
+
+
+
+
+
+
+

@@ -155,4 +155,4 @@ EMAIL_HOST_USER = 'rojilauprety1@gmail.com'
 EMAIL_HOST_PASSWORD = 'janggeunsuk'  # Use App Password if using Gmail
 
 
-LOGIN_REDIRECT_URL = 'landing'
+LOGIN_REDIRECT_URL = '/landing-auth/'
