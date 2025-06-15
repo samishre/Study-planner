@@ -9,44 +9,83 @@
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
+      background-color: #f7f9fc;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #333;
     }
 
     form {
-      margin-bottom: 30px;
-    }
-
-    #calendar {
-      max-width: 1000px;
-      margin: 20px auto;
+      margin-bottom: 20px;
     }
 
     label {
       display: block;
       margin-top: 10px;
+      font-weight: bold;
     }
 
     input, select, button {
       margin-top: 5px;
-      padding: 5px;
+      padding: 8px;
+      width: 100%;
+      max-width: 400px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background-color: #0056b3;
     }
 
     .form-section {
+      background: white;
       border: 1px solid #ddd;
-      padding: 15px;
-      margin-bottom: 20px;
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 500px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
 
     .form-section h3 {
       margin-top: 0;
+      color: #444;
+    }
+
+    #calendar {
+      max-width: 1000px;
+      margin: 40px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    #statusMessage {
+      margin-top: 10px;
+      font-weight: bold;
+      color: green;
     }
   </style>
 </head>
 <body>
+
   <h1>📚 Study Planner Dashboard</h1>
 
   <!-- Subject Form -->
   <div class="form-section">
-    <h3>Add Subject</h3>
+    <h3>➕ Add Subject</h3>
     <form id="subject-form">
       <label>Subject Name:</label>
       <input type="text" id="subject-name" required>
@@ -58,25 +97,31 @@
 
   <!-- Topic Form -->
   <div class="form-section">
-    <h3>Add Topic</h3>
+    <h3>➕ Add Topic</h3>
     <form id="topic-form">
       <label>Subject (ID):</label>
       <input type="number" id="subject-id" required>
       <label>Topic Title:</label>
       <input type="text" id="topic-title" required>
-      <label>Difficulty (1-5):</label>
+      <label>Difficulty (1 = easy, 5 = hard):</label>
       <input type="number" id="difficulty" min="1" max="5" required>
       <button type="submit">Add Topic</button>
     </form>
   </div>
 
-  <!-- Generate Schedule Button -->
-  <div>
-    <button onclick="generateSchedule()">Generate Schedule</button>
+  <!-- Intelligent Schedule Generator -->
+  <div class="form-section">
+    <h3>🧠 Intelligent Schedule Generator</h3>
+    <form id="scheduleForm">
+      <label for="hours">Available Study Hours Per Day:</label>
+      <input type="number" id="hours" name="hours" min="1" max="24" required>
+      <button type="submit">Generate Schedule</button>
+    </form>
+    <p id="statusMessage"></p>
   </div>
 
-  <!-- Calendar -->
-  <h2 style="margin-top: 40px;">📅 Your Study Schedule</h2>
+  <!-- Calendar Section -->
+  <h2>📅 Your Study Schedule</h2>
   <div id="calendar"></div>
 
   <script>
@@ -94,7 +139,7 @@
       });
       calendar.render();
 
-      // Subject Form Submit
+      // Add Subject
       document.getElementById('subject-form').addEventListener('submit', async function (e) {
         e.preventDefault();
         const name = document.getElementById('subject-name').value;
@@ -107,10 +152,10 @@
           },
           body: JSON.stringify({ name: name, exam_date: examDate })
         });
-        alert('Subject added.');
+        alert('✅ Subject added.');
       });
 
-      // Topic Form Submit
+      // Add Topic
       document.getElementById('topic-form').addEventListener('submit', async function (e) {
         e.preventDefault();
         const subjectId = document.getElementById('subject-id').value;
@@ -124,22 +169,29 @@
           },
           body: JSON.stringify({ subject: subjectId, title: title, difficulty: difficulty })
         });
-        alert('Topic added.');
+        alert('✅ Topic added.');
       });
 
-      // Generate Schedule
-      window.generateSchedule = async function () {
+      // Intelligent Schedule Generator
+      document.getElementById('scheduleForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const hours = document.getElementById('hours').value;
+
         const response = await fetch('/api/generate-schedule/', {
           method: 'POST',
           headers: {
+            'Content-Type': 'application/json',
             'X-CSRFToken': getCookie('csrftoken')
-          }
+          },
+          body: JSON.stringify({ available_hours_per_day: hours })
         });
-        alert('Schedule Generated!');
-        calendar.refetchEvents();
-      };
 
-      // CSRF helper
+        const data = await response.json();
+        document.getElementById('statusMessage').innerText = data.message || 'Schedule generated!';
+        calendar.refetchEvents(); // refresh calendar
+      });
+
+      // CSRF Token Getter
       function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Study Planner</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+    }
+
+    header {
+      background-color: #343a40;
+      padding: 1rem 2rem;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    nav a {
+      color: white;
+      margin-left: 1.5rem;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .hero {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 2rem;
+      background-color: white;
+    }
+
+    .hero img {
+      max-width: 500px;
+      width: 100%;
+      border-radius: 12px;
+      margin: 1rem;
+    }
+
+    .hero-text {
+      max-width: 500px;
+      margin: 1rem;
+    }
+
+    .hero-text h1 {
+      font-size: 2.5rem;
+      color: #007bff;
+    }
+
+    .hero-text p {
+      font-size: 1.2rem;
+      line-height: 1.6;
+      margin-top: 1rem;
+      color: #333;
+    }
+
+    footer {
+      background-color: #343a40;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      margin-top: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .hero {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">AI Study Planner</div>
+    <nav>
+      <a href="{% url 'signup' %}">Sign Up</a>
+      <a href="{% url 'login' %}">Login</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <img src="https://cdn.pixabay.com/photo/2015/01/21/14/14/apple-606761_1280.jpg" alt="Study planning" />
+    <div class="hero-text">
+      <h1>Smart Study Planning Made Easy</h1>
+      <p>
+        Our AI-powered Study Planner helps you create a personalized timetable based on your subjects, topic difficulty, and available study hours. 
+        Focus on what matters most and let the system handle the schedule. Study smarter, not harder.
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    &copy; {{ now.year }} AI Study Planner. All rights reserved.
+  </footer>
+
+</body>
+</html>

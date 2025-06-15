@@ -1,33 +1,28 @@
 from rest_framework import viewsets
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import Subject, Topic, UserAvailability
-from .serializers import SubjectSerializer, TopicSerializer, UserAvailabilitySerializer
-from .scheduler import generate_schedule
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
-
-#for login log out 
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+
+from datetime import datetime
+from .models import Subject, Topic, UserAvailability, StudySchedule
+from .serializers import SubjectSerializer, TopicSerializer, UserAvailabilitySerializer, StudyScheduleSerializer
+
+# ✅ Import scheduler function
+from .scheduler import generate_schedule
+
 
 def calendar_page(request):
     return render(request, 'planner/calendar.html')
 
 
-
-# for calendar
-from django.http import JsonResponse
-from .models import StudySchedule
-from .serializers import StudyScheduleSerializer
-from rest_framework.decorators import action
-from rest_framework import status
-
 def calendar_events_view(request):
-    user = request.user  # Make sure user is authenticated or adapt for public view
-    schedules = StudySchedule.objects.all()
+    user = request.user
+    schedules = StudySchedule.objects.filter(topic__user=user)
 
     events = []
     for schedule in schedules:
@@ -40,38 +35,43 @@ def calendar_events_view(request):
         })
     return JsonResponse(events, safe=False)
 
+
 def home(request):
-    return HttpResponse("Welcome to the Study Planner Home Page!")
+    return render(request, 'landing.html')
 
 
-# Subject ViewSet
 class SubjectViewSet(viewsets.ModelViewSet):
     serializer_class = SubjectSerializer
+
     def get_queryset(self):
         return Subject.objects.filter(user=self.request.user)
+
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-# Topic ViewSet
+
 class TopicViewSet(viewsets.ModelViewSet):
     serializer_class = TopicSerializer
+
     def get_queryset(self):
         return Topic.objects.filter(subject__user=self.request.user)
 
-# User Availability ViewSet
+
 class UserAvailabilityViewSet(viewsets.ModelViewSet):
     serializer_class = UserAvailabilitySerializer
+
     def get_queryset(self):
         return UserAvailability.objects.filter(user=self.request.user)
+
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-#for calendar
+
 class StudyScheduleViewSet(viewsets.ModelViewSet):
     queryset = StudySchedule.objects.all()
     serializer_class = StudyScheduleSerializer
     permission_classes = [IsAuthenticated]
-        
+
     def get_queryset(self):
         user = self.request.user
         start = self.request.query_params.get('start')
@@ -80,58 +80,55 @@ class StudyScheduleViewSet(viewsets.ModelViewSet):
         if start and end:
             qs = qs.filter(start_time__range=[start, end])
         return qs
-        return StudySchedule.objects.all()
-        
 
     @action(detail=True, methods=['post'])
     def mark_completed(self, request, pk=None):
         schedule = self.get_object()
         schedule.completed = True
         schedule.save()
-        return Response({'status': 'marked as completed'}, status=status.HTTP_200_OK)
+        return Response({'status': 'marked as completed'}, status=200)
 
 
-# Schedule Generator View
+# ✅ Refactored to call scheduler.py logic
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def generate_schedule_view(request):
-    generate_schedule(request.user)
-    return Response({'message': 'Schedule generated!'})
+    available_hours = request.data.get('available_hours_per_day', None)
+    if available_hours:
+        generate_schedule(request.user, available_hours_per_day=int(available_hours))
+    else:
+        generate_schedule(request.user)
+    return Response({'message': 'Schedule generated using intelligent heuristic!'})
 
 
-#for dashboard frontend
 def dashboard(request):
     return render(request, 'planner/dashboard.html')
 
 
-
-# Signup View
 def signup_view(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user)  # log the user in after signup
-            return redirect('dashboard')  # or wherever you want
+            login(request, user)
+            return redirect('dashboard')
     else:
         form = UserCreationForm()
     return render(request, 'users/signup.html', {'form': form})
 
-# Login View
+
 def login_view(request):
     if request.method == 'POST':
         form = AuthenticationForm(data=request.POST)
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            return redirect('dashboard')  # or your home page
+            return redirect('dashboard')
     else:
         form = AuthenticationForm()
     return render(request, 'users/login.html', {'form': form})
 
-# Logout View
+
 def logout_view(request):
     logout(request)
-    return redirect('login')  # back to login after logout
-
-
+    return redirect('login')

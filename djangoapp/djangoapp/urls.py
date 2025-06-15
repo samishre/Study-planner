@@ -2,10 +2,10 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from planner.views import generate_schedule_view
-
+from django.shortcuts import render
 
 from planner.views import SubjectViewSet, TopicViewSet, UserAvailabilityViewSet, StudyScheduleViewSet  # <- Import them!
-from planner.views import home
+from planner.views import home  # or from users.views if home() is there
 
 
 #for calendar
@@ -15,6 +15,9 @@ from planner.views import calendar_events_view
 from planner.views import calendar_page
 
 
+# for landing page view
+def landing_page(request):
+    return render(request, 'landing.html')
 
 router = DefaultRouter()
 
@@ -28,11 +31,17 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('api/generate-schedule/', generate_schedule_view, name='generate-schedule'),
-    path('', home, name='home'),
+    path('', home, name='home'), # root URL will render landing page
     path('api/calendar-events/', calendar_events_view, name='calendar-events'),
     path('calendar/', calendar_page, name='calendar-page'),
     path('', include('planner.urls')),
     #path('api/users/', include('users.urls')),
+    
+    path('', landing_page, name='landing'),
+  
+
+
+
    
 ]
 
