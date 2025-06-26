@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 
+
 class Subject(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
@@ -26,14 +27,14 @@ class UserAvailability(models.Model):
 class StudySchedule(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE)
-    date = models.DateField()
-    # Calendar-friendly fields
-    start_time = models.DateTimeField(default=timezone.now)
-    end_time = models.DateTimeField(null=True, blank=True)
-    
-    # Optional fields
-    hours = models.FloatField()
+    study_date = models.DateField()
+    study_hours = models.PositiveIntegerField()
     is_completed = models.BooleanField(default=False)
+    start_time = models.DateTimeField(null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return f"{self.topic.title} on {self.start_time.strftime('%Y-%m-%d %H:%M')}"
+        return f"{self.user.username} - {self.topic.title} on {self.study_date}"
+
+
+

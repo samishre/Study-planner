@@ -11,6 +11,11 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from dotenv import load_dotenv
+import os
+
+load_dotenv()  # loads variables from .env
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -92,7 +97,7 @@ WSGI_APPLICATION = 'djangoapp.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'study_planner_db',  # your database name
+        'NAME': 'study_planner_db',  #  database name
         'USER': 'root',
         'PASSWORD': 'password123',
         'HOST': 'localhost',

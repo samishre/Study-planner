@@ -1,212 +1,145 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Study Planner Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      background-color: #f7f9fc;
-    }
-
-    h1, h2 {
-      text-align: center;
-      color: #333;
-    }
-
-    form {
-      margin-bottom: 20px;
-    }
-
-    label {
-      display: block;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-
-    input, select, button {
-      margin-top: 5px;
-      padding: 8px;
-      width: 100%;
-      max-width: 400px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-    }
-
-    button {
-      background-color: #007bff;
-      color: white;
-      border: none;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    .form-section {
-      background: white;
-      border: 1px solid #ddd;
-      padding: 20px;
-      margin: 20px auto;
-      max-width: 500px;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    }
-
-    .form-section h3 {
-      margin-top: 0;
-      color: #444;
-    }
-
-    #calendar {
-      max-width: 1000px;
-      margin: 40px auto;
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-
-    #statusMessage {
-      margin-top: 10px;
-      font-weight: bold;
-      color: green;
-    }
-  </style>
 </head>
 <body>
 
-  <h1>📚 Study Planner Dashboard</h1>
+  <h1>Generate Study Schedule</h1>
 
-  <!-- Subject Form -->
-  <div class="form-section">
-    <h3>➕ Add Subject</h3>
-    <form id="subject-form">
-      <label>Subject Name:</label>
-      <input type="text" id="subject-name" required>
-      <label>Exam Date:</label>
-      <input type="date" id="exam-date" required>
-      <button type="submit">Add Subject</button>
-    </form>
-  </div>
+  <form id="planner-form">
+    {% csrf_token %}
+    <label for="subject-name">Subject Name:</label>
+    <input type="text" id="subject-name" name="subject_name" required />
 
-  <!-- Topic Form -->
-  <div class="form-section">
-    <h3>➕ Add Topic</h3>
-    <form id="topic-form">
-      <label>Subject (ID):</label>
-      <input type="number" id="subject-id" required>
-      <label>Topic Title:</label>
-      <input type="text" id="topic-title" required>
-      <label>Difficulty (1 = easy, 5 = hard):</label>
-      <input type="number" id="difficulty" min="1" max="5" required>
-      <button type="submit">Add Topic</button>
-    </form>
-  </div>
+    <label for="exam-date">Exam Date:</label>
+    <input type="date" id="exam-date" name="exam_date" required />
 
-  <!-- Intelligent Schedule Generator -->
-  <div class="form-section">
-    <h3>🧠 Intelligent Schedule Generator</h3>
-    <form id="scheduleForm">
-      <label for="hours">Available Study Hours Per Day:</label>
-      <input type="number" id="hours" name="hours" min="1" max="24" required>
-      <button type="submit">Generate Schedule</button>
-    </form>
-    <p id="statusMessage"></p>
-  </div>
+    <label for="daily-hours">Available Study Hours Per Day:</label>
+    <input type="number" id="daily-hours" name="daily_hours" min="1" max="24" value="2" required />
 
-  <!-- Calendar Section -->
-  <h2>📅 Your Study Schedule</h2>
-  <div id="calendar"></div>
+    <h3>Topics</h3>
+    <div id="topics-container">
+      <div class="topic-group">
+        <label>Topic Title:</label>
+        <input type="text" class="topic-title" required />
+        <label>Difficulty (1 = Easy, 5 = Hard):</label>
+        <input type="number" class="topic-difficulty" min="1" max="5" value="3" required />
+      </div>
+    </div>
+
+    <button type="button" id="add-topic-btn">+ Add Another Topic</button>
+
+    <br /><br />
+    <button type="submit" id="generate-btn">Generate Schedule</button>
+  </form>
+
+  <div id="statusMessage" style="margin-top: 20px; color: green;"></div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      // Calendar Setup
-      const calendarEl = document.getElementById('calendar');
-      const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        events: '/api/calendar-events/',
-        eventColor: '#28a745',
-        height: 'auto',
-        eventClick: function (info) {
-          alert('Topic: ' + info.event.title);
+    console.log("Script loaded and running");
+
+    // CSRF helper from Django docs
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
         }
-      });
-      calendar.render();
+      }
+      return cookieValue;
+    }
 
-      // Add Subject
-      document.getElementById('subject-form').addEventListener('submit', async function (e) {
-        e.preventDefault();
-        const name = document.getElementById('subject-name').value;
-        const examDate = document.getElementById('exam-date').value;
-        await fetch('/api/subjects/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-          },
-          body: JSON.stringify({ name: name, exam_date: examDate })
-        });
-        alert('✅ Subject added.');
-      });
+    document.getElementById('add-topic-btn').addEventListener('click', () => {
+      console.log("Add topic clicked");
+      const container = document.getElementById('topics-container');
+      const div = document.createElement('div');
+      div.className = 'topic-group';
+      div.innerHTML = `
+        <label>Topic Title:</label>
+        <input type="text" class="topic-title" required />
+        <label>Difficulty (1 = Easy, 5 = Hard):</label>
+        <input type="number" class="topic-difficulty" min="1" max="5" value="3" required />
+      `;
+      container.appendChild(div);
+    });
 
-      // Add Topic
-      document.getElementById('topic-form').addEventListener('submit', async function (e) {
-        e.preventDefault();
-        const subjectId = document.getElementById('subject-id').value;
-        const title = document.getElementById('topic-title').value;
-        const difficulty = document.getElementById('difficulty').value;
-        await fetch('/api/topics/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-          },
-          body: JSON.stringify({ subject: subjectId, title: title, difficulty: difficulty })
-        });
-        alert('✅ Topic added.');
-      });
+    document.getElementById('planner-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      console.log("Form submission intercepted");
 
-      // Intelligent Schedule Generator
-      document.getElementById('scheduleForm').addEventListener('submit', async function (e) {
-        e.preventDefault();
-        const hours = document.getElementById('hours').value;
+      const submitBtn = document.getElementById('generate-btn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Generating...";
 
+      const subjectName = document.getElementById('subject-name').value.trim();
+      const examDate = document.getElementById('exam-date').value;
+      const hoursPerDay = parseInt(document.getElementById('daily-hours').value);
+
+      const topicTitles = document.querySelectorAll('.topic-title');
+      const topicDifficulties = document.querySelectorAll('.topic-difficulty');
+
+      const topics = [];
+      for (let i = 0; i < topicTitles.length; i++) {
+        const title = topicTitles[i].value.trim();
+        const difficulty = parseInt(topicDifficulties[i].value);
+        if (title && difficulty >= 1 && difficulty <= 5) {
+          topics.push({ title, difficulty });
+        }
+      }
+
+      if (!subjectName || !examDate || !hoursPerDay || topics.length === 0) {
+        alert("Please fill in all required fields and add at least one topic.");
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Generate Schedule";
+        return;
+      }
+
+      try {
+        console.log("Sending data:", {subject_name: subjectName, exam_date: examDate, available_hours_per_day: hoursPerDay, topics});
         const response = await fetch('/api/generate-schedule/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
+            'X-CSRFToken': getCookie('csrftoken'),
           },
-          body: JSON.stringify({ available_hours_per_day: hours })
+          body: JSON.stringify({
+            subject_name: subjectName,
+            exam_date: examDate,
+            available_hours_per_day: hoursPerDay,
+            topics: topics
+          }),
         });
-
-        const data = await response.json();
-        document.getElementById('statusMessage').innerText = data.message || 'Schedule generated!';
-        calendar.refetchEvents(); // refresh calendar
-      });
-
-      // CSRF Token Getter
-      function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-          const cookies = document.cookie.split(';');
-          for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-              break;
-            }
-          }
+        console.log("Response status:", response.status);
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(`Server error ${response.status}: ${errText}`);
         }
-        return cookieValue;
+        const data = await response.json();
+        if (data.message && data.message.toLowerCase().includes("success")) {
+          document.getElementById('statusMessage').textContent = "Schedule generated successfully! Redirecting...";
+          setTimeout(() => {
+            window.location.href = "/calendar/";
+          }, 1500);
+        } else {
+          alert("Failed to generate schedule: " + (data.message || "Unknown error"));
+        }
+      } catch (err) {
+        alert("Error: " + err.message);
+        console.error(err);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Generate Schedule";
       }
     });
   </script>
+
 </body>
 </html>
