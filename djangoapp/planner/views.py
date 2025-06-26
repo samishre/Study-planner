@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth.decorators import login_required
+from django.utils import timezone
 
 from .gemini_utils import gemini_generate_schedule
 from .models import Subject, Topic, UserAvailability, StudySchedule
@@ -66,7 +66,7 @@ def dashboard(request):
     return render(request, 'planner/dashboard.html')
 
 
-# ViewSets for API functionality
+# ViewSets
 class SubjectViewSet(viewsets.ModelViewSet):
     serializer_class = SubjectSerializer
     permission_classes = [IsAuthenticated]
@@ -119,87 +119,75 @@ class StudyScheduleViewSet(viewsets.ModelViewSet):
         return Response({'status': 'marked as completed'}, status=200)
 
 
-# Generate schedule using Gemini AI
+# ✅ Generate schedule
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def generate_schedule_view(request):
     if request.method == 'POST':
-        print("✅ Gemini schedule generation started")
-
         user = request.user
         data = request.data
-
-        # Debug logs
-        print("📥 Received data:", data)
-        print("📘 Topics data:", data.get("topics"))
 
         subject_name = data.get("subject_name")
         exam_date = data.get("exam_date")
         available_hours_per_day = int(data.get("available_hours_per_day", 1))
         topics_data = data.get("topics", [])
 
-        print("DEBUG - subject_name:", subject_name)
-        print("DEBUG - exam_date:", exam_date)
-        print("DEBUG - daily_hours:", available_hours_per_day)
-        print("DEBUG - topics_data:", topics_data)
+        print("✅ Input received:")
+        print("Subject:", subject_name)
+        print("Exam Date:", exam_date)
+        print("Daily Hours:", available_hours_per_day)
+        print("Topics:", topics_data)
 
-        # Call Gemini AI with full topics data (list of dicts)
-        gemini_response = gemini_generate_schedule(
-            subject_name, exam_date, available_hours_per_day, topics_data
-        )
+        # Call Gemini
+        gemini_response = gemini_generate_schedule(subject_name, exam_date, available_hours_per_day, topics_data)
 
         if not gemini_response:
-            print("❌ Gemini returned no schedule.")
             return Response({"message": "Failed to generate schedule using Gemini."}, status=400)
+
+        # Save User Availability
+        UserAvailability.objects.create(user=user, available_hours_per_day=available_hours_per_day)
 
         # Create Subject
         subject = Subject.objects.create(name=subject_name, exam_date=exam_date, user=user)
 
-        # Create topics and build lowercase title mapping
+        # Create Topics
         topic_map = {}
         for topic in topics_data:
-            t = Topic.objects.create(
-                subject=subject,
-                title=topic["title"],
-                difficulty=topic["difficulty"]
-            )
+            t = Topic.objects.create(subject=subject, title=topic["title"], difficulty=topic["difficulty"])
             topic_map[t.title.strip().lower()] = t
 
-        # Save study schedule entries
+        # Create Schedule Entries
         created_count = 0
+        now = timezone.now()
+        today = now.date()
+        exam_date_obj = datetime.strptime(exam_date, "%Y-%m-%d").date()
+        end_date = exam_date_obj - timedelta(days=1)
+
         for item in gemini_response:
             try:
                 topic_title = item.get('topic', '').strip().lower()
-                study_date_str = item.get('date')
                 study_hours = int(item.get('hours', 1))
-
                 topic_obj = topic_map.get(topic_title)
                 if not topic_obj:
-                    print(f"⚠ Topic not found in topic_map: {topic_title}")
                     continue
-
-                study_date = datetime.strptime(study_date_str, "%Y-%m-%d").date()
-
-                print(f"Attempting to save: {topic_title}, Date: {study_date_str}, Hours: {study_hours}")
 
                 schedule = StudySchedule.objects.create(
                     user=user,
                     topic=topic_obj,
-                    study_date=study_date,
-                    start_time=datetime.combine(study_date, datetime.min.time()),
-                    end_time=datetime.combine(study_date, datetime.min.time()) + timedelta(hours=study_hours),
+                    study_date=today,
+                    start_time=now,
+                    end_time=datetime.combine(end_date, now.time()),
                     study_hours=study_hours
                 )
                 created_count += 1
-
             except Exception as e:
-                print("❌ Error creating schedule entry:", e)
+                print("❌ Error saving schedule:", e)
 
-        print(f"✅ Total schedules saved: {created_count}")
+        print(f"✅ {created_count} schedule entries saved.")
         return Response({"message": "Schedule generated and saved successfully!"})
 
 
-# Auth views
+# Auth
 def signup_view(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)

@@ -20,9 +20,17 @@ class Topic(models.Model):
     def __str__(self):
         return self.title
 
+#class UserAvailability(models.Model):
+    #user = models.OneToOneField(User, on_delete=models.CASCADE)
+    #daily_hours = models.FloatField()
+
 class UserAvailability(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    daily_hours = models.FloatField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    available_hours_per_day = models.IntegerField()
+    date = models.DateField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.available_hours_per_day} hrs"
 
 class StudySchedule(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

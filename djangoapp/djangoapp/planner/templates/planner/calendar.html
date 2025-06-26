@@ -1,0 +1,36 @@
+<!-- templates/planner/calendar.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Study Schedule Calendar</title>
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    #calendar { max-width: 900px; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <h2>📅 Your Study Schedule</h2>
+  <div id="calendar"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const calendarEl = document.getElementById('calendar');
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek'
+        },
+        events: '/calendar/events/', // This fetches from Django's calendar_events_view
+        eventColor: '#007bff',
+        eventDisplay: 'block',
+        eventTimeFormat: { hour: 'numeric', minute: '2-digit', hour12: true }
+      });
+      calendar.render();
+    });
+  </script>
+</body>
+</html>

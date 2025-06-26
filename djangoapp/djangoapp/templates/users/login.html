@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #74ebd5, #9face6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .login-box {
+      background: white;
+      padding: 2.5rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: bold;
+      color: #555;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 0.3rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 1.5rem;
+      padding: 10px;
+      background-color: #007bff;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .errorlist {
+      color: red;
+      list-style: none;
+      padding-left: 0;
+      font-size: 0.9rem;
+      margin-top: 0.25rem;
+    }
+
+    .message-box {
+      margin-bottom: 1rem;
+      padding: 0.75rem;
+      background-color: #ffe6e6;
+      color: #a94442;
+      border: 1px solid #f5c6cb;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-box">
+  <h2>Login</h2>
+  <form method="POST" novalidate>
+    {% csrf_token %}
+
+    {% if messages %}
+      <div class="message-box">
+        <ul class="errorlist">
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <label for="id_username">Username</label>
+    <input type="text" name="username" id="id_username" required />
+
+    <label for="id_password">Password</label>
+    <input type="password" name="password" id="id_password" required />
+
+    <button type="submit">Login</button>
+  </form>
+</div>
+
+</body>
+</html>
