@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Study Schedule Calendar</title>
+
+  <!-- FullCalendar & Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      background-color: #f4f6fb;
+      color: #1e1e2f;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 80px;
+      background-color: #ffffff;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem 0;
+      gap: 1.5rem;
+    }
+
+    .sidebar-icon {
+      width: 48px;
+      height: 48px;
+      background-color: #f1f3f7;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      color: #2c629c;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-icon:hover {
+      background-color: #2c629c;
+      color: white;
+    }
+
+    /* Main */
+    .main {
+      flex: 1;
+      padding: 2rem;
+    }
+
+    h2 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: #2c3e50;
+    }
+
+    #calendar {
+      background: white;
+      border-radius: 1rem;
+      padding: 1rem;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Enlarged time slots */
+    .fc-timegrid-slot {
+      min-height: 80px !important;
+    }
+
+    .fc-timegrid-now-indicator-line {
+      height: 3px !important;
+    }
+
+    /* Event styles */
+    .fc-event {
+      border-radius: 0.4rem;
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 2px 6px 3px 20px;
+      line-height: 1.4;
+      position: relative;
+    }
+
+    .fc-event.completed {
+      background-color: #d1e7dd !important;
+      border-color: #badbcc !important;
+      color: #0f5132 !important;
+    }
+
+    .fc-event.pending {
+      background-color: #2c629c !important;
+      border-color: #2c629c !important;
+      color: white !important;
+    }
+
+    .fc-daygrid-event {
+      padding: 6px;
+      font-size: 1rem;
+      line-height: 1.4;
+    }
+
+    /* Checkbox */
+    .event-checkbox {
+      position: absolute;
+      left: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    /* Tooltip */
+    .popover {
+      max-width: 250px;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 60px;
+      }
+      .main {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <!-- ✅ Home button redirects to /home/ -->
+      <div class="" ></div>
+       <div class="" ></div>
+        <div class="" ></div>
+    <div class="sidebar-icon" title="Home" onclick="window.location.href='/authenticated-home/'">🏠</div>
+    <div class="sidebar-icon" id="download-btn" title="Download JPG">⬇️</div>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+    <h2>Your Study Schedule</h2>
+    <div id="calendar"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <script>
+  // CSRF Token helper for Django
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const calendarEl = document.getElementById('calendar');
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'timeGridWeek',
+      slotMinTime: "06:00:00",
+      slotMaxTime: "22:00:00",
+      slotDuration: "00:30:00",
+
+      expandRows: true,
+      allDaySlot: false,
+
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek'
+      },
+
+      height: 'auto',
+      nowIndicator: true,
+      eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: true },
+
+      events: '/api/calendar-events/',
+
+      eventDidMount: function (info) {
+        // Add checkbox
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.classList.add('event-checkbox');
+
+        if (info.event.extendedProps.is_completed) {
+          checkbox.checked = true;
+          info.el.classList.add('completed');
+        } else {
+          info.el.classList.add('pending');
+        }
+
+        checkbox.addEventListener('change', () => {
+          const isCompleted = checkbox.checked;
+
+          // Toggle visual styles
+          info.el.classList.toggle('completed', isCompleted);
+          info.el.classList.toggle('pending', !isCompleted);
+
+          // ✅ Send AJAX request to update completion status
+          fetch('/api/toggle-completion/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+              id: info.event.id,
+              is_completed: isCompleted
+            })
+          }).then(res => {
+            if (!res.ok) {
+              alert('Failed to update completion status.');
+            }
+          }).catch(err => {
+            console.error('Error:', err);
+          });
+        });
+
+        info.el.prepend(checkbox);
+
+        // Tooltip
+        const subject = info.event.extendedProps.subject || "Unknown";
+        const topic = info.event.title || "Topic";
+        const start = new Date(info.event.start).toLocaleString();
+        const end = new Date(info.event.end).toLocaleString();
+        const hours = info.event.extendedProps.hours || "";
+
+        const tooltipContent = `
+          <strong>Subject:</strong> ${subject}<br/>
+          <strong>Topic:</strong> ${topic}<br/>
+          <strong>Start:</strong> ${start}<br/>
+          <strong>End:</strong> ${end}<br/>
+          ${hours ? '<strong>Hours:</strong> ' + hours : ''}
+        `;
+
+        new bootstrap.Popover(info.el, {
+          title: 'Study Session',
+          content: tooltipContent,
+          trigger: 'hover',
+          placement: 'top',
+          container: 'body',
+          html: true
+        });
+      }
+    });
+
+    calendar.render();
+
+    // Download JPG
+    document.getElementById("download-btn").addEventListener("click", function () {
+      html2canvas(calendarEl, {
+        useCORS: true,
+        scale: 2,
+        backgroundColor: "#ffffff"
+      }).then(function (canvas) {
+        const link = document.createElement("a");
+        link.download = "study_schedule.jpg";
+        link.href = canvas.toDataURL("image/jpeg", 1.0);
+        link.click();
+      });
+    });
+  });
+</script>
+
+</body>
+</html>
+
+
+

@@ -1,0 +1,219 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Study Planner</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f9fbff;
+    }
+
+    /* Navbar */
+    .navbar {
+      background-color: #ffffff;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .navbar-brand {
+      font-weight: 700;
+      color: #2c629c;
+    }
+
+    .btn-login, .btn-signup {
+      border-radius: 50px;
+      font-weight: 600;
+      padding: 0.5rem 1.25rem;
+    }
+
+    .btn-login {
+      color: #2c629c;
+      border: 1px solid #2c629c;
+      margin-right: 0.5rem;
+    }
+
+    .btn-signup {
+      background-color: #2c629c;
+      color: white;
+      border: none;
+    }
+
+    .hero {
+      background-color: #eaf3ff;
+      padding: 4rem 4rem;
+    }
+
+    .hero h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      color: #555;
+    }
+
+    .btn-primary {
+      background-color:#2c629c;
+      border-color:#2c629c;
+      border-radius: 30px;
+      padding: 10px 25px;
+      font-weight: 600;
+    }
+
+    .feature-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 16px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+      text-align: center;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .feature-card img {
+      height: 350px;
+      margin-bottom: 1rem;
+    }
+
+    .how-it-works img {
+      height: 140px;
+    }
+
+    .step-number {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #2c629c;
+      margin-top: 0.5rem;
+    }
+
+    .cta {
+      background: white;
+      color:black;
+      text-align: center;
+      padding: 3rem 2rem;
+    }
+    .cta a {
+      background-color:#2c629c;
+      color:white;
+      font-weight: 600;
+      border-radius: 50px;
+      padding: 0.75rem 1.5rem;
+      text-decoration: none;
+      display: inline-block;
+      margin-top: 1rem;
+    }
+
+    footer {
+      background-color:#2c629c;
+      color: white;
+      text-align: center;
+      padding: 1rem 0;
+      margin-top: 3rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header / Navbar -->
+<nav class="navbar navbar-expand-lg sticky-top">
+  <div class="container">
+    <a class="navbar-brand" href="#">Study Planner</a>
+    <div class="ms-auto">
+      <a href="{% url 'login' %}" class="btn btn-login">Login</a>
+      <a href="{% url 'signup' %}" class="btn btn-signup">Sign Up</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <h1>Smarter Study Planning Starts Here</h1>
+        <p>Our AI Study Planner helps students organize their preparation based on available hours and topic difficulty. Say goodbye to guesswork and hello to a smarter study routine!</p>
+        <a href="{% url 'login' %}" class="btn btn-primary mt-3">Generate My Schedule</a>
+      </div>
+      <div class="col-md-6 text-center">
+        <img src="{% static 'images/studyplanning.jpg' %}" alt="Study Planning" class="img-fluid" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Why Choose Us Section with Equal Height -->
+<section class="container py-5">
+  <div class="text-center mb-5">
+    <h2 class="fw-bold">Why Choose AI Study Planner?</h2>
+    <p class="text-muted">Your study companion, powered by intelligence.</p>
+  </div>
+  <div class="row g-4">
+    <div class="col-md-4 d-flex">
+      <div class="feature-card w-100">
+        <img src="{% static 'images/time-management-icon.png' %}" alt="Time Management">
+        <h5 class="fw-bold">Efficient Time Management</h5>
+        <p>AI generates sessions based on your availability and prioritizes harder topics to maximize your results.</p>
+      </div>
+    </div>
+    <div class="col-md-4 d-flex">
+      <div class="feature-card w-100">
+        <img src="{% static 'images/calendar.png' %}" alt="Smart Scheduling">
+        <h5 class="fw-bold">Smart Scheduling</h5>
+        <p>Get a realistic calendar plan that adjusts to your needs with rest breaks and personalized session durations.</p>
+      </div>
+    </div>
+    <div class="col-md-4 d-flex">
+      <div class="feature-card w-100">
+        <img src="{% static 'images/reminder.png' %}" alt="Reminders">
+        <h5 class="fw-bold">Reminders & Alerts</h5>
+        <p>Stay on track with email reminders for upcoming sessions and alerts for missed ones.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section class="container how-it-works py-5">
+  <div class="text-center mb-5">
+    <h2 class="fw-bold">How It Works</h2>
+  </div>
+  <div class="row text-center">
+    <div class="col-md-4">
+      <img src="{% static 'images/entersubjectt.png' %}" alt="Step 1">
+      <div class="step-number">1. Enter Subjects</div>
+      <p>List your subjects and set difficulty for each topic.</p>
+    </div>
+    <div class="col-md-4">
+      <img src="{% static 'images/generate.png' %}" alt="Step 2">
+      <div class="step-number">2. Generate Schedule</div>
+      <p>AI creates your personalized study plan instantly.</p>
+    </div>
+    <div class="col-md-4">
+      <img src="{% static 'images/followplan.png' %}" alt="Step 3">
+      <div class="step-number">3. Follow Your Plan</div>
+      <p>Use the interactive calendar and reminders to stay on track daily.</p>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="container">
+    <h2 class="mb-3">Ready to Take Control of Your Study Plan?</h2>
+    <p class="lead">Join thousands of students who use AI to study better and smarter.</p>
+    <a href="{% url 'signup' %}">Get Started</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  &copy; {{ now.year }} AI Study Planner. Designed with 💙 for students.
+</footer>
+
+</body>
+</html>
