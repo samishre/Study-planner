@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Study Planner Dashboard</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+      background-color: white;
+      color: #1f2b3d;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    h1.page-title {
+      font-weight: 700;
+      font-size: 2.2rem;
+      color: #2c629c;
+      letter-spacing: 1.2px;
+      margin-bottom: 2rem;
+      user-select: none;
+      text-align: center;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .form-container {
+      background: rgb(208, 219, 243);
+      padding: 2.5rem 2rem;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 900px;
+      box-shadow:
+        0 10px 30px rgba(44, 98, 156, 0.2),
+        inset 0 0 0 1px #2c629c;
+      display: flex;
+      gap: 3rem;
+      align-items: flex-start;
+      color: #1f2b3d;
+    }
+
+    .left-column, .right-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      flex: 1;
+    }
+
+    .section-title {
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: #2c629c;
+      margin-bottom: 0.5rem;
+      user-select: none;
+      border-bottom: 2px solid #2c629c;
+      padding-bottom: 0.3rem;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.4rem;
+      color: #2c629c;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="number"] {
+      width: 100%;
+      padding: 0.7rem 1rem;
+      border-radius: 8px;
+      border: 1.5px solid rgba(44, 98, 156, 0.6);
+      background-color: rgb(208, 219, 243);
+      color: #1f2b3d;
+      font-size: 1rem;
+      font-weight: 500;
+      transition:
+        background-color 0.3s ease,
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
+    }
+
+    input::placeholder {
+      color: #5a6b81;
+    }
+
+    input:focus {
+      outline: none;
+      background-color: #e4ecf8;
+      border-color: #2c629c;
+      box-shadow: 0 0 8px 2px rgba(44, 98, 156, 0.4);
+    }
+
+    #topics-container {
+      max-height: 420px;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+
+    .topic-group {
+      width: 100%;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      border-radius: 10px;
+      background-color: rgb(208, 219, 243);
+      border: 1px solid rgba(44, 98, 156, 0.3);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.9rem 1rem;
+      align-items: center;
+    }
+
+    .topic-group label {
+      flex-basis: 100%;
+      margin-bottom: 0.3rem;
+      color: #2c629c;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .topic-group input.topic-title {
+      flex: 1 1 60%;
+      min-width: 140px;
+    }
+
+    .topic-group input.topic-difficulty {
+      flex: 1 1 25%;
+      min-width: 70px;
+    }
+
+    .delete-topic-btn {
+      flex-shrink: 0;
+      background: red;
+      border: none;
+      border-radius: 8px;
+      padding: 0.4rem 1rem;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 3px 6px rgba(248, 81, 73, 0.4);
+    }
+
+    .delete-topic-btn:hover {
+      background: red;
+    }
+
+    #add-topic-btn,
+    #generate-btn {
+      width: 100%;
+      padding: 0.9rem 0;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      border: none;
+      color: white;
+      user-select: none;
+      background: #2c629c;
+      box-shadow: 0 6px 18px rgba(44, 98, 156, 0.3);
+    }
+
+    #generate-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    #statusMessage {
+      font-weight: 600;
+      font-size: 1rem;
+      text-align: center;
+      color: #2c629c;
+      min-height: 28px;
+      user-select: none;
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 900px) {
+      .form-container {
+        flex-direction: column;
+        max-width: 500px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .topic-group {
+        flex-direction: column;
+      }
+      .topic-group input.topic-title,
+      .topic-group input.topic-difficulty {
+        flex: 1 1 100%;
+        min-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1 class="page-title">Generate Your Study Schedule</h1>
+
+  <form id="planner-form" class="form-container" novalidate>
+    {% csrf_token %}
+    <div class="left-column">
+      <div class="section-title">Details</div>
+      <label for="subject-name">Subject Name</label>
+      <input type="text" id="subject-name" name="subject_name" placeholder="e.g. Mathematics" required />
+
+      <label for="exam-date">Exam Date</label>
+      <input type="date" id="exam-date" name="exam_date" required />
+
+      <label for="daily-hours">Available Study Hours Per Day</label>
+      <input type="number" id="daily-hours" name="daily_hours" min="1" max="24" value="2" required />
+    </div>
+
+    <div class="right-column">
+      <div class="section-title">Topics</div>
+      <div id="topics-container">
+        <div class="topic-group">
+          <label>Topic Title</label>
+          <input type="text" class="topic-title" required placeholder="e.g. Algebra" />
+          <label>Difficulty (1-5)</label>
+          <input type="number" class="topic-difficulty" min="1" max="5" value="3" required />
+          <button type="button" class="delete-topic-btn">Delete</button>
+        </div>
+      </div>
+
+      <button type="button" id="add-topic-btn">+ Add Another Topic</button>
+      <button type="submit" id="generate-btn">Generate Schedule</button>
+      <div id="statusMessage"></div>
+    </div>
+  </form>
+
+  <script>
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + '=') {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    document.getElementById('add-topic-btn').addEventListener('click', () => {
+      const container = document.getElementById('topics-container');
+      const div = document.createElement('div');
+      div.className = 'topic-group';
+      div.innerHTML = `
+        <label>Topic Title</label>
+        <input type="text" class="topic-title" required placeholder="e.g. Geometry" />
+        <label>Difficulty (1-5)</label>
+        <input type="number" class="topic-difficulty" min="1" max="5" value="3" required />
+        <button type="button" class="delete-topic-btn">Delete</button>
+      `;
+      container.appendChild(div);
+    });
+
+    document.getElementById('topics-container').addEventListener('click', (e) => {
+      if (e.target.classList.contains('delete-topic-btn')) {
+        e.target.parentElement.remove();
+      }
+    });
+
+    document.getElementById('planner-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('generate-btn');
+      const statusMessage = document.getElementById('statusMessage');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Generating...';
+      statusMessage.textContent = '';
+
+      const subjectName = document.getElementById('subject-name').value.trim();
+      const examDate = document.getElementById('exam-date').value;
+      const hoursPerDay = parseInt(document.getElementById('daily-hours').value);
+
+      const topicTitles = document.querySelectorAll('.topic-title');
+      const topicDifficulties = document.querySelectorAll('.topic-difficulty');
+
+      const topics = [];
+      for (let i = 0; i < topicTitles.length; i++) {
+        const title = topicTitles[i].value.trim();
+        const difficulty = parseInt(topicDifficulties[i].value);
+        if (title && difficulty >= 1 && difficulty <= 5) {
+          topics.push({ title, difficulty });
+        }
+      }
+
+      if (!subjectName || !examDate || !hoursPerDay || topics.length === 0) {
+        alert('Please fill in all required fields and add at least one topic.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Generate Schedule';
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/generate-schedule/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+          },
+          body: JSON.stringify({
+            subject_name: subjectName,
+            exam_date: examDate,
+            available_hours_per_day: hoursPerDay,
+            topics: topics,
+          }),
+        });
+
+        const data = await response.json();
+        if (data.message && data.message.toLowerCase().includes('success')) {
+          statusMessage.textContent = '✅ Schedule generated successfully! Redirecting...';
+          setTimeout(() => {
+            window.location.href = '/calendar/';
+          }, 1500);
+        } else if (data.message && data.message.toLowerCase().includes('today or in the past')) {
+          statusMessage.textContent = '⚠️ Schedule not generated because exam date is today or in the past.';
+        } else {
+          statusMessage.textContent = '❌ Failed to generate schedule: ' + (data.message || 'Unknown error');
+        }
+      } catch (err) {
+        statusMessage.textContent = '❌ Error: ' + err.message;
+        console.error(err);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Generate Schedule';
+      }
+    });
+  </script>
+</body>
+</html>
